@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOUBLE B POS</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background:#111;
+    color:white;
+    max-width:500px;
+    margin:auto;
+}
+
+h2{
+    text-align:center;
+    color:#FFD700;
+}
+
+.box{
+    background:#1c1c1c;
+    padding:15px;
+    border-radius:12px;
+    margin:10px 0;
+}
+
+input,select{
+    width:100%;
+    padding:12px;
+    margin-top:5px;
+    border-radius:8px;
+    border:none;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:10px;
+    background:#FFD700;
+    color:black;
+    font-weight:bold;
+    border:none;
+    border-radius:12px;
+    font-size:18px;
+}
+
+#dashboard{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h2>DOUBLE B POS</h2>
+
+<div id="pos">
+
+<div class="box">
+<label>Pick-up (đ)</label>
+<input type="number" id="pickup" value="0">
+
+<label>Booking (đ)</label>
+<input type="number" id="booking" value="0">
+
+<label>Drink (đ)</label>
+<input type="number" id="drink" value="0">
+
+<label>Giảm giá (%)</label>
+<input type="number" id="discount" value="0">
+</div>
+
+<button onclick="checkout()">THANH TOÁN</button>
+<h3 id="result"></h3>
+
+<button onclick="openDashboard()">MỞ DASHBOARD</button>
+
+</div>
+
+<div id="dashboard">
+
+<h2>DASHBOARD</h2>
+
+<div class="box">
+<h3>Tổng hôm nay: <span id="todayTotal">0</span> đ</h3>
+<h3>Pick-up: <span id="todayPickup">0</span></h3>
+<h3>Booking: <span id="todayBooking">0</span></h3>
+<h3>Drink: <span id="todayDrink">0</span></h3>
+</div>
+
+<canvas id="revenueChart"></canvas>
+
+<button onclick="exportExcel()">XUẤT EXCEL THÁNG</button>
+<button onclick="backPOS()">QUAY LẠI POS</button>
+
+</div>
+
+<script>
+
+function checkout(){
+
+let pickup = parseInt(document.getElementById("pickup").value) || 0;
+let booking = parseInt(document.getElementById("booking").value) || 0;
+let drink = parseInt(document.getElementById("drink").value) || 0;
+let discount = parseInt(document.getElementById("discount").value) || 0;
+
+let subtotal = pickup + booking + drink;
+let total = subtotal - (subtotal * discount / 100);
+
+let order = {
+    date: new Date().toISOString(),
+    pickup,
+    booking,
+    drink,
+    total
+};
+
+let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
+orders.push(order);
+localStorage.setItem("doubleb_orders", JSON.stringify(orders));
+
+document.getElementById("result").innerText = "Tổng: " + total.toLocaleString() + " đ";
+
+alert("Đã lưu hóa đơn!");
+resetForm();
+}
+
+function resetForm(){
+document.getElementById("pickup").value = 0;
+document.getElementById("booking").value = 0;
+document.getElementById("drink").value = 0;
+document.getElementById("discount").value = 0;
+}
+
+function openDashboard(){
+document.getElementById("pos").style.display="none";
+document.getElementById("dashboard").style.display="block";
+loadDashboard();
+}
+
+function backPOS(){
+document.getElementById("pos").style.display="block";
+document.getElementById("dashboard").style.display="none";
+}
+
+function loadDashboard(){
+
+let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
+let today = new Date().toISOString().slice(0,10);
+
+let todayPickup=0, todayBooking=0, todayDrink=0, todayTotal=0;
+
+let dailyRevenue = {};
+
+orders.forEach(o=>{
+let date = o.date.slice(0,10);
+
+if(date === today){
+todayPickup += o.pickup;
+todayBooking += o.booking;
+todayDrink += o.drink;
+todayTotal += o.total;
+}
+
+if(!dailyRevenue[date]) dailyRevenue[date]=0;
+dailyRevenue[date]+=o.total;
+
+});
+
+document.getElementById("todayTotal").innerText = todayTotal.toLocaleString();
+document.getElementById("todayPickup").innerText = todayPickup.toLocaleString();
+document.getElementById("todayBooking").innerText = todayBooking.toLocaleString();
+document.getElementById("todayDrink").innerText = todayDrink.toLocaleString();
+
+let labels = Object.keys(dailyRevenue);
+let data = Object.values(dailyRevenue);
+
+new Chart(document.getElementById("revenueChart"),{
+type:"bar",
+data:{
+labels:labels,
+datasets:[{
+label:"Doanh thu",
+data:data
+}]
+}
+});
+}
+
+function exportExcel(){
+
+let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
+let ws = XLSX.utils.json_to_sheet(orders);
+let wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "DoanhThu");
+
+XLSX.writeFile(wb,"doubleb_doanhthu.xlsx");
+}
+
+</script>
+
+</body>
+</html>
