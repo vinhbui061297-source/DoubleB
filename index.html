@@ -3,204 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOUBLE B POS</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>DOUBLE B POS PRO</title>
 
 <style>
 body{
-    font-family: Arial;
-    background:#111;
-    color:white;
-    max-width:500px;
-    margin:auto;
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
 }
 
-h2{
-    text-align:center;
-    color:#FFD700;
+.container{
+display:flex;
+flex-wrap:wrap;
 }
 
-.box{
-    background:#1c1c1c;
-    padding:15px;
-    border-radius:12px;
-    margin:10px 0;
+.products{
+flex:2;
+padding:15px;
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
 }
 
-input,select{
-    width:100%;
-    padding:12px;
-    margin-top:5px;
-    border-radius:8px;
-    border:none;
-    font-size:16px;
+.product{
+background:#1c1c1c;
+padding:20px;
+border-radius:12px;
+text-align:center;
+font-weight:bold;
+font-size:16px;
+cursor:pointer;
+}
+
+.product:hover{
+background:#FFD700;
+color:black;
+}
+
+.cart{
+flex:1;
+background:#000;
+padding:15px;
+min-width:280px;
+}
+
+.cart h2{
+text-align:center;
+color:#FFD700;
+}
+
+.cart-item{
+display:flex;
+justify-content:space-between;
+margin:8px 0;
+font-size:14px;
+}
+
+.total{
+font-size:22px;
+font-weight:bold;
+margin-top:15px;
 }
 
 button{
-    width:100%;
-    padding:15px;
-    margin-top:10px;
-    background:#FFD700;
-    color:black;
-    font-weight:bold;
-    border:none;
-    border-radius:12px;
-    font-size:18px;
+width:100%;
+padding:15px;
+margin-top:10px;
+font-size:18px;
+border:none;
+border-radius:10px;
+cursor:pointer;
 }
 
-#dashboard{
-    display:none;
+.pay{
+background:#FFD700;
+color:black;
+font-weight:bold;
+}
+
+.clear{
+background:#333;
+color:white;
+}
+
+@media(max-width:768px){
+.container{
+flex-direction:column;
+}
 }
 </style>
 </head>
 
 <body>
 
-<h2>DOUBLE B POS</h2>
+<div class="container">
 
-<div id="pos">
+<div class="products">
 
-<div class="box">
-<label>Pick-up (đ)</label>
-<input type="number" id="pickup" value="0">
+<div class="product" onclick="addItem('Pick-up Ca 1',49000)">Pick-up Ca 1<br>49.000</div>
+<div class="product" onclick="addItem('Pick-up Ca 2',39000)">Pick-up Ca 2<br>39.000</div>
 
-<label>Booking (đ)</label>
-<input type="number" id="booking" value="0">
+<div class="product" onclick="addItem('Shooting Vãng lai',59000)">Shooting Vãng lai<br>59.000</div>
+<div class="product" onclick="addItem('Shooting Basic',199000)">Basic<br>199.000</div>
+<div class="product" onclick="addItem('Shooting Pro',399000)">Pro<br>399.000</div>
+<div class="product" onclick="addItem('Shooting Elite',599000)">Elite<br>599.000</div>
 
-<label>Drink (đ)</label>
-<input type="number" id="drink" value="0">
+<div class="product" onclick="addItem('Booking T2-T5 Sáng',249000)">Booking T2-T5 Sáng<br>249.000</div>
+<div class="product" onclick="addItem('Booking T2-T5 Tối',299000)">Booking T2-T5 Tối<br>299.000</div>
+<div class="product" onclick="addItem('Booking T6-CN Sáng',299000)">Booking T6-CN Sáng<br>299.000</div>
+<div class="product" onclick="addItem('Booking T6-CN Tối',349000)">Booking T6-CN Tối<br>349.000</div>
 
-<label>Giảm giá (%)</label>
-<input type="number" id="discount" value="0">
+<div class="product" onclick="addItem('Aquafina',10000)">Aquafina<br>10.000</div>
+<div class="product" onclick="addItem('Revie Trắng',20000)">Revie Trắng<br>20.000</div>
+<div class="product" onclick="addItem('Revie Chanh Muối',20000)">Revie Chanh Muối<br>20.000</div>
+<div class="product" onclick="addItem('Trà C2',20000)">Trà C2<br>20.000</div>
+<div class="product" onclick="addItem('Trà Olong',20000)">Trà Olong<br>20.000</div>
+
 </div>
 
-<button onclick="checkout()">THANH TOÁN</button>
-<h3 id="result"></h3>
+<div class="cart">
 
-<button onclick="openDashboard()">MỞ DASHBOARD</button>
+<h2>HÓA ĐƠN</h2>
 
+<div id="cartItems"></div>
+
+<div class="total">
+Tổng: <span id="total">0</span> đ
 </div>
 
-<div id="dashboard">
+<select id="discount" onchange="updateTotal()">
+<option value="0">Không giảm</option>
+<option value="5">Giảm 5%</option>
+<option value="10">Giảm 10%</option>
+<option value="15">Giảm 15%</option>
+</select>
 
-<h2>DASHBOARD</h2>
+<button class="pay" onclick="checkout()">THANH TOÁN</button>
+<button class="clear" onclick="clearCart()">XÓA HÓA ĐƠN</button>
 
-<div class="box">
-<h3>Tổng hôm nay: <span id="todayTotal">0</span> đ</h3>
-<h3>Pick-up: <span id="todayPickup">0</span></h3>
-<h3>Booking: <span id="todayBooking">0</span></h3>
-<h3>Drink: <span id="todayDrink">0</span></h3>
 </div>
-
-<canvas id="revenueChart"></canvas>
-
-<button onclick="exportExcel()">XUẤT EXCEL THÁNG</button>
-<button onclick="backPOS()">QUAY LẠI POS</button>
 
 </div>
 
 <script>
 
+let cart = [];
+
+function addItem(name,price){
+
+let existing = cart.find(i=>i.name===name);
+
+if(existing){
+existing.qty++;
+}else{
+cart.push({name,price,qty:1});
+}
+
+renderCart();
+}
+
+function renderCart(){
+
+let html="";
+let total=0;
+
+cart.forEach((item,index)=>{
+let itemTotal=item.price*item.qty;
+total+=itemTotal;
+
+html+=`
+<div class="cart-item">
+<div>
+${item.name}<br>
+${item.price.toLocaleString()} x ${item.qty}
+</div>
+<div>
+${itemTotal.toLocaleString()} đ<br>
+<button onclick="changeQty(${index},1)">+</button>
+<button onclick="changeQty(${index},-1)">-</button>
+</div>
+</div>
+`;
+});
+
+document.getElementById("cartItems").innerHTML=html;
+document.getElementById("total").innerText=total.toLocaleString();
+updateTotal();
+}
+
+function changeQty(index,amount){
+cart[index].qty+=amount;
+if(cart[index].qty<=0){
+cart.splice(index,1);
+}
+renderCart();
+}
+
+function updateTotal(){
+
+let total=0;
+
+cart.forEach(item=>{
+total+=item.price*item.qty;
+});
+
+let discount=parseInt(document.getElementById("discount").value);
+let finalTotal=total-(total*discount/100);
+
+document.getElementById("total").innerText=finalTotal.toLocaleString();
+}
+
 function checkout(){
 
-let pickup = parseInt(document.getElementById("pickup").value) || 0;
-let booking = parseInt(document.getElementById("booking").value) || 0;
-let drink = parseInt(document.getElementById("drink").value) || 0;
-let discount = parseInt(document.getElementById("discount").value) || 0;
-
-let subtotal = pickup + booking + drink;
-let total = subtotal - (subtotal * discount / 100);
-
-let order = {
-    date: new Date().toISOString(),
-    pickup,
-    booking,
-    drink,
-    total
-};
-
-let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
-orders.push(order);
-localStorage.setItem("doubleb_orders", JSON.stringify(orders));
-
-document.getElementById("result").innerText = "Tổng: " + total.toLocaleString() + " đ";
-
-alert("Đã lưu hóa đơn!");
-resetForm();
+if(cart.length===0){
+alert("Chưa có sản phẩm");
+return;
 }
 
-function resetForm(){
-document.getElementById("pickup").value = 0;
-document.getElementById("booking").value = 0;
-document.getElementById("drink").value = 0;
-document.getElementById("discount").value = 0;
-}
+let orders=JSON.parse(localStorage.getItem("doubleb_orders"))||[];
 
-function openDashboard(){
-document.getElementById("pos").style.display="none";
-document.getElementById("dashboard").style.display="block";
-loadDashboard();
-}
-
-function backPOS(){
-document.getElementById("pos").style.display="block";
-document.getElementById("dashboard").style.display="none";
-}
-
-function loadDashboard(){
-
-let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
-let today = new Date().toISOString().slice(0,10);
-
-let todayPickup=0, todayBooking=0, todayDrink=0, todayTotal=0;
-
-let dailyRevenue = {};
-
-orders.forEach(o=>{
-let date = o.date.slice(0,10);
-
-if(date === today){
-todayPickup += o.pickup;
-todayBooking += o.booking;
-todayDrink += o.drink;
-todayTotal += o.total;
-}
-
-if(!dailyRevenue[date]) dailyRevenue[date]=0;
-dailyRevenue[date]+=o.total;
-
+orders.push({
+date:new Date().toISOString(),
+items:cart,
+total:document.getElementById("total").innerText
 });
 
-document.getElementById("todayTotal").innerText = todayTotal.toLocaleString();
-document.getElementById("todayPickup").innerText = todayPickup.toLocaleString();
-document.getElementById("todayBooking").innerText = todayBooking.toLocaleString();
-document.getElementById("todayDrink").innerText = todayDrink.toLocaleString();
+localStorage.setItem("doubleb_orders",JSON.stringify(orders));
 
-let labels = Object.keys(dailyRevenue);
-let data = Object.values(dailyRevenue);
-
-new Chart(document.getElementById("revenueChart"),{
-type:"bar",
-data:{
-labels:labels,
-datasets:[{
-label:"Doanh thu",
-data:data
-}]
-}
-});
+alert("Thanh toán thành công!");
+clearCart();
 }
 
-function exportExcel(){
-
-let orders = JSON.parse(localStorage.getItem("doubleb_orders")) || [];
-let ws = XLSX.utils.json_to_sheet(orders);
-let wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, "DoanhThu");
-
-XLSX.writeFile(wb,"doubleb_doanhthu.xlsx");
+function clearCart(){
+cart=[];
+renderCart();
 }
 
 </script>
